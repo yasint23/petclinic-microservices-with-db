@@ -62,16 +62,16 @@ pipeline {
         stage('Deploy App on Petclinic Kubernetes Cluster'){       
             steps {
                 echo 'Deploying App on K8s Cluster'
-                sh "rancher login $RANCHER_URL --context $RANCHER_CONTEXT --token $RANCHER_CREDS_USR:$RANCHER_CREDS_PSW"   #jenkins server rancher'a login oluyor
+                sh "rancher login $RANCHER_URL --context $RANCHER_CONTEXT --token $RANCHER_CREDS_USR:$RANCHER_CREDS_PSW"   
                 sh "envsubst < k8s/petclinic_chart/values-template.yaml > k8s/petclinic_chart/values.yaml"
                 sh "sed -i s/HELM_VERSION/${BUILD_NUMBER}/ k8s/petclinic_chart/Chart.yaml"
                 sh "rancher kubectl delete secret regcred -n petclinic-prod-ns || true"
                 sh """
                 rancher kubectl create secret generic regcred -n petclinic-prod-ns \
-                --from-file=.dockerconfigjson=$JENKINS_HOME/.docker/config.json \       # Ecr baglanmak icin secret config.json icinde bu yuzden secred ulasmak icin cred olusturuyoruz.
+                --from-file=.dockerconfigjson=$JENKINS_HOME/.docker/config.json \       
                 --type=kubernetes.io/dockerconfigjson
                 """
-                sh "rm -f k8s/config"                       (Rancher clustera ulasmak icin config dosyasini kullaniyoruz, once home altindaki config remove yapiyoruz)
+                sh "rm -f k8s/config"                       
                 sh "rancher cluster kf $CLUSTERID > k8s/config"
                 sh "chmod 400 k8s/config"
                 sh "helm repo add stable-petclinic s3://yasin-petclinic-helm-charts/stable/myapp/"
