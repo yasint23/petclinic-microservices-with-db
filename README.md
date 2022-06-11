@@ -14,6 +14,8 @@ This project aims to create full CI/CD Pipeline for microservice based applicati
 
 ![Pipelines to be configured](./project-503-pipelines.png)
 
+![Project Structure](./project_structure.png)
+
 ## Flow of Tasks for Project Realization
 
 | Epic | Task  | Task #  | Task Definition   | Branch  |
@@ -66,8 +68,8 @@ sudo hostnamectl set-hostname petclinic-dev-server
 sudo amazon-linux-extras install docker -y
 sudo systemctl start docker
 sudo systemctl enable docker
-sudo usermod -a -G docker ec2-user
-sudo newgrp docker
+sudo usermod -a -G docker ec2-user   
+newgrp docker
 sudo curl -L "https://github.com/docker/compose/releases/download/1.26.2/docker-compose-$(uname -s)-$(uname -m)" \
 -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
@@ -101,7 +103,7 @@ git init
 git add .
 git commit -m "first commit"
 git branch -M main
-git remote add origin https://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@github.com/yasint23/test-petclinic-microservices-with-db.git
+git remote add origin https://`token`@github.com/yasint23/test-petclinic-microservices-with-db.git
 git push origin main
 ```
 * Prepare base branches namely `main`,  `dev`,  `release` for DevOps cycle.
@@ -125,6 +127,8 @@ git push origin main
     ```
 
 ## MSP 3 - Check the Maven Build Setup on Dev Branch
+
+# Maven lifecylcle bakilabilir bu bolumdeki komutlar ile alakali; https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html
 
 * Switch to `dev` branch.
 
@@ -153,34 +157,7 @@ git checkout dev
 ``` bash
 ./mvnw clean install
 ```
-## MSP 4 - Prepare a Script for Packaging the Application
-
-* Create `feature/msp-4` branch from `dev`.
-
-``` bash
-git checkout dev
-git branch feature/msp-4
-git checkout feature/msp-4
-```
-
-* Prepare a script to package the application with maven wrapper and save it as `package-with-mvn-wrapper.sh` under `petclinic-microservices-with-db` folder.
-
-``` bash
-./mvnw clean package
-```
-
-* Commit and push the new script to remote repo.
-
-``` bash
-git add .
-git commit -m 'added packaging script'
-git push --set-upstream origin feature/msp-4
-git checkout dev
-git merge feature/msp-4
-git push origin dev
-```
-
-## MSP 5 - Prepare Development Server Cloudformation Template
+## MSP 4 - Prepare Development Server Cloudformation Template
 
 * Create `feature/msp-5` branch from `dev`.
 
@@ -217,7 +194,7 @@ git merge feature/msp-5
 git push origin dev
 ```
 
-## MSP 6 - Prepare Dockerfiles for Microservices
+## MSP 5 - Prepare Dockerfiles for Microservices
 
 * Create `feature/msp-6` branch from `dev`.
 
@@ -358,7 +335,7 @@ git merge feature/msp-6
 git push origin dev
 ```
 
-## MSP 7 - Prepare Script for Building Docker Images
+## MSP 6 - Prepare Script for Building Docker Images
 
 * Create `feature/msp-7` branch from `dev`.
 
@@ -407,7 +384,7 @@ git merge feature/msp-7
 git push origin dev
 ```
 
-## MSP 8 - Create Docker Compose File for Local Development
+## MSP 7 - Create Docker Compose File for Local Development
 
 * Create `feature/msp-8` branch from `dev`.
 
@@ -538,38 +515,23 @@ services:
     ports:
     - 3306:3306
 ```
-
-* Prepare a script to test the deployment of the app locally with `docker-compose-local.yml` and save it as `test-local-deployment.sh` under `petclinic-microservices-with-db` folder.
-
 ``` bash
 docker-compose -f docker-compose-local.yml up
 ```
-
-* Give execution permission to test-local-deployment.sh.
-
-```bash
-chmod +x test-local-deployment.sh
-```
-
-* Execute the docker compose.
-
-```bash
-./test-local-deployment.sh
-```
-* Check the website running on webbrowser and open the sec-grp 8080 to everywhere.
+* Check the website running on web browser and open the sec-grp 8080 to everywhere.
 
 * Commit the change, then push the docker compose file to the remote repo.
 
 ``` bash
 git add .
-git commit -m 'added docker-compose file and script for local deployment'
+git commit -m 'added docker-compose file'
 git push --set-upstream origin feature/msp-8
 git checkout dev
 git merge feature/msp-8
 git push origin dev
 ```
 
-## MSP 9 - Setup Unit Tests and Configure Code Coverage Report
+## MSP 8 - Setup Unit Tests and Configure Code Coverage Report
 
 * Create `feature/msp-9` branch from `dev`.
 
@@ -640,7 +602,8 @@ git commit -m 'added 3 UTs for customer-service'
 git push --set-upstream origin feature/msp-9
 ```
 
-* Update POM file at root folder for Code Coverage Report using `Jacoco` tool plugin. testler gercek uygulamanin % kacini kapsadigini kiyaslamak icin bu tool kullaniliyor.
+* Update POM file at root folder for Code Coverage Report using `Jacoco` tool plugin. 
+# testler gercek uygulamanin % kacini kapsadigini kiyaslamak icin bu tool kullaniliyor.
 
 * Copy the below to the 'pom' file under root folder,
 ``` 
@@ -914,9 +877,19 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 
 * Search and select `GitHub Integration`,  `Docker Plugin`,  `Docker Pipeline`, and `Jacoco` plugins, then click `Install without restart`. Note: No need to install the other `Git plugin` which is already installed can be seen under `Installed` tab.
 
-* Configure Docker as `cloud agent` by navigating to `Manage Jenkins` >> `Manage Nodes and Clouds` >> `Configure Clouds` and using `tcp://localhost:2375` as Docker Host URI.
+# Jenkins de yuksek CPU gerektiren uygulamalar jenkins server yormasin diye slave node lari agent olarak kullanabiliyorduk. Burada da jenkins server 2375 portundan docker deamon dinleyecek ve jenkins jab lari docker container icerisinde kullanabilmis olacagiz.
+# Bu ayari jenkins cfn template deki, sed -i 's/^ExecStart=.*/ExecStart=\/usr\/bin\/doc -H tcp:\/\/127.0.0.1:2375... komutu ile yaptik. Simdi de Jenkins server uzerinde docker cloud agent olarak atayacagiz.
+
+* Configure Docker as `cloud agent` by navigating to `Manage Jenkins` >> `Manage Nodes and Clouds` >> `Configure Clouds`  and using `tcp://localhost:2375` as Docker Host URI.  
 
 * If you want to check how it is work from this link 'https://www.jenkins.io/doc/book/pipeline/docker/' copy the Jenkinsfile (Declarative Pipeline) then "New Item" give name "test docker agent' --> freestyle and paste to the "shell" --> apply/save --> build now.
+
+# Simdi onceki serverdaki belgeleri guthub dan jenkins server'a cekerek onceki server kapatacagiz gereksiz ucret yazmasin, artik jenjkins server ile devam edecegiz.
+- Github hesabindan repoyu jenkins server'a clone yapcagiz.
+```bash
+git clone https://github.com/yasint23/test-petclinic-microservices-with-db.git
+```
+
 
 ## MSP 13 - Prepare Continuous Integration (CI) Pipeline
 
@@ -997,7 +970,7 @@ mkdir jenkins
 ```
 * Create a Jenkins job with the name of `petclinic-ci-job`:  (developer lar jenkins uzerinde unit testlerini yapiyorlar bu adimda)
   * Select `Freestyle project` and click `OK`
-  * Select github project and write the url to your repository's page into `Project url` (https://github.com/[your-github-account]/petclinic-microservices)
+  * Select github project and write the url to your repository's page into `Project url` (https://github.com/yasint23/test-petclinic-microservices-with-db)
   * Under the `Source Code Management` select `Git` 
   * Write the url of your repository into the `Repository URL` (https://github.com/[your-github-account]/petclinic-microservices.git)
   * Add `*/dev`, `*/feature**` and `*/bugfix**` branches to `Branches to build`
@@ -1014,13 +987,21 @@ mkdir jenkins
   
   ######
   * Bu komutun aciklamasi: 
-  - Maven calisinca home directorysinde /.m2 local repo olsuturur ve butun dependencyleri buraya koyar, daha sonra tekrar mvn calistirinca ayni dependencyleri buradan alir tekrar yuklemez. 
-  - Jenkins uzerinde mvn calistirmak icin dockerhub dan maven-image(maven:3.6-openjdk-11) kullaniyoruz. Ancak pomfile gormesi gerekiyor docker run komutunda, bu yuzden volume(-v) bagliyoruz, bu volumde hercalsitiginda olusan gereksiz dosyalari tutmasin diye --rm yaziyoruz.
-  - `pwd`:/app -w /app (Bulundugum klasordeki dosyalari /app icerisine koyduk ancak calismasi icin -w /app 'workspace deki /app pathini tanimliyoruz)
-  - $HOME/.m2:/root/.m2 -v (Herdefasinda konteynir icerisinde .m2 klasoru olusturmasin diye bizim home directorymizdeki .m2 klasorunu konteynir icerisinde /root/.m2 volume ile root altindaki .m2 klasorune bagliyoruz. "root" konteynir da user ve onun home direct ise .m2 folder oluyor)
-  - Sonuc olarak bu komut sayesinde jenkins server'a maven yuklemeden konteynir $HOME/.m2 dan gerekli dosya dependencyleri alarak calisacak ve her seferinde unit testleri yapmasi.
-  -"$HOME/.m2" jenkins serverde "var/lib/jenkins/worksopace/petclinic-ci-job" oluyor.
-  ######
+  - Maven calisinca home directorysinde root altinda `/.m2` local repo olusturur ve butun dependencyleri buraya koyar, daha sonra tekrar mvn calistirinca ayni dependencyleri buradan alir tekrar yuklemez. 
+  - $HOME/.m2:/root/.m2 -v (Maven calistiginda root user altinda .m2 klasorunu herdefasinda klasoru olusturmasin diye bizim home directorymizdeki .m2 klasorunu, konteynir icerisindeki /root/.m2 volume ile root altindaki /.m2 klasorune bagliyoruz. 
+  - Jenkins uzerinde mvn calistirmak icin dockerhub dan maven-image(maven:3.6-openjdk-11) kullaniyoruz. Ancak pom file gormesi gerekiyor docker run komutunda, bu yuzden volume(-v) bagliyoruz, bu volumde her calistiginda olusan gereksiz dosyalari tutmasin diye --rm yaziyoruz.
+  - `pwd`:/app -w /app (Bulundugum klasordeki dosyalari /app icerisine koyduk ancak calismasi icin -w /app `workspace`(jenkins home directory) deki /app pathini tanimliyoruz)
+  
+  - Sonuc olarak bu komut sayesinde jenkins server'a maven yuklemeden konteynir $HOME/.m2 dan gerekli dosya dependencyleri alarak calisacak ve her seferinde unit testleri yapabilecegiz. 
+
+  Ek Bilgiler:
+  -"$HOME/.m2" jenkins serverde "var/lib/jenkins/worksopace/petclinic-ci-job" oluyor. 
+  $ cd /var/lib/jenkins
+  $ sudo su - jenkins    (Jenkins root girmis olduk, ls -a yazarsak `workspace` `/.m2` klasorlerini gorecegiz)
+  - workspace icerisinde her calistirdigimiz job file'lar olusur `petclinic-ci-job` diye bir file olusmus ve yukaridaki komut sayesinde
+  projenin butun file lari buraya kopyalanmis oldu)
+  $ sudo usermod -s /bin/bash jenkins (Jenkins kullanicisina shell ekleme, burda jenkins server otomotize ediyoruz)
+#####
   
 * Jenkins `CI Job` should be triggered to run on each commit of `feature**` and `bugfix**` branches and on each `PR` merge to `dev` branch.
 
@@ -1032,7 +1013,7 @@ docker run --rm -v $HOME/.m2:/root/.m2 -v `pwd`:/app -w /app maven:3.8-openjdk-1
 ```
 * Create a webhook for Jenkins CI Job; 
 
-  + Go to the project repository page and click on `Settings`.
+  + Go to the Github project repository page and click on `Settings`.
 
   + Click on the `Webhooks` on the left hand menu, and then click on `Add webhook`.
 
@@ -1043,6 +1024,7 @@ docker run --rm -v $HOME/.m2:/root/.m2 -v `pwd`:/app -w /app maven:3.8-openjdk-1
   ```
 
 * Commit the change, then push the Jenkinsfile to the remote repo.
+# Asagidaki islemleri yaptiktan sonra `petclinic-ci-job` jenkins pipeline de trigger olacak, cunku webhook yaptik, job da `*/Feature**` branch belirttik, her degisklik de github job'u trigger edecek. 
 
 ``` bash
 git add .
@@ -1052,10 +1034,10 @@ git checkout dev
 git merge feature/msp-13
 git push origin dev
 ```
-#####
-"petclinic-nightly" (Geceleri yapilacak functional testler icin) section a geldik. Onceki "petclinic-ci-job" da unit testleri yaptik.
- Burada gercek hayatta kubernetes ile yapilir ancak biz egitim amacli docker swarm ve ansible kullanacagiz.
-Bunun icin; 
+# "petclinic-nightly" (Geceleri yapilacak functional testler icin) section a geldik. Onceki "petclinic-ci-job" da unit testleri yaptik.
+# Burada gercek hayatta kubernetes ile yapilabiliyor ancak biz docker swarm ve ansible kullanacagiz.
+# Neden burada k8s kullanmadik; Maliyeti dusurmek, kucuk bir proje k8s kurulum asamalari ile ugrasmamak, ansible kullanmak icin vs.
+# Bunun icin; 
 - CFN ile ile 5 adet ec2-instance ayaga kaldiracagiz tabi burda keypair otomotize etmemiz gerekiyor, 
 - imageleri AWS-ECR dan docker registry den alacagiz
 - Ansible ile instance lari yonetecegiz. Bundan soraki asamalar bunun icin.
@@ -1064,9 +1046,10 @@ Bunun icin;
 ## MSP 14 - Create Docker Registry for Dev Manually
 
 * Create a Jenkins Freestyle Job and name it as `create-ecr-docker-registry-for-dev` to create Docker Registry for `dev` on AWS ECR manually.
-- Copy the command to the "Execute shell"
-- petclininc folder da "aws" '/usr/path/bin' altinda o nedenle calismasi icin path vermemiz gerekiyor.
-- Jenkins serverde role verdigimiz icin aws config yapmamiz gerekmiyor.
+
+# Copy the command to the "Execute shell"
+# petclininc folder da "aws" command '/usr/path/bin' altinda o nedenle calismasi icin path belirtmemiz gerekiyor.
+# Jenkins server'a role verdigimiz icin aws config yapmamiz gerekmiyor. Jenkins server ile ECR kurduk manual yapabilirdik.
 
 ``` bash
 PATH="$PATH:/usr/local/bin"
@@ -1126,7 +1109,7 @@ git checkout feature/msp-16
 ```
 
 - Prepare a Cloudformation template for Docker Swarm Infrastructure consisting of 3 Managers, 2 Worker Instances and save it as `dev-docker-swarm-infrastructure-cfn-template.yml` under `infrastructure` folder.
-## Bu cfn dosyasinda docker image olan 5 ec2 var ve bunlara ansible tarafindan yonetmek icin "tag" ler verildi. Managerlar dan biri grand-master, ileride ansible da tagler bu isim ile verilcek.
+## Bu cfn dosyasinda docker image olan 5 ec2 var ve bunlara ansible tarafindan yonetmek icin "tag" ler verildi. Managerlar dan biri grand-master, ileride ansible da dynamic inventory bu tagler ile kullanilacak. Bunu proje klasorunden aldik, daha once hazirlanmis.
 
 - Grant permissions to Docker Machines within Cloudformation template to create ECR Registry, push or pull Docker images to/from ECR Repo.
 
@@ -1160,6 +1143,7 @@ aws --version
   * Click `Save`
 
 - After running the job above, replace the script with the one below in order to test creating key pair for `ansible`.
+# Jenkins de `Project test-creating-qa-automation-infrastructure` gelip `configure` tiklayip `Execute shell'i` update ediyoruz. 
 
 ```bash
 PATH="$PATH:/usr/local/bin"
@@ -1169,26 +1153,29 @@ aws ec2 create-key-pair --region ${AWS_REGION} --key-name ${CFN_KEYPAIR} --query
 chmod 400 ${CFN_KEYPAIR}
 ```
 
-- After running the job above, replace the script with the one below in order to test creating Docker Swarm infrastructure with AWS Cloudformation.
+- After running the job above, replace the script with the one below in order to test creating Docker Swarm infrastructure with AWS Cloudformation. 
+# Cloudformation jenkins server uzerinden olusturuyoruz, Console da manual olarak stack olusturmadan.
 
 ```bash
 PATH="$PATH:/usr/local/bin"
 APP_NAME="Petclinic"
 APP_STACK_NAME="yasin-test-$APP_NAME-App-${BUILD_NUMBER}"
-CFN_KEYPAIR="yasin-test-ansible-test-dev.key"
+CFN_KEYPAIR="yasin-ansible-test-dev.key"
 CFN_TEMPLATE="./infrastructure/dev-docker-swarm-infrastructure-cfn-template.yml"
 AWS_REGION="us-east-1"
 aws cloudformation create-stack --region ${AWS_REGION} --stack-name ${APP_STACK_NAME} --capabilities CAPABILITY_IAM --template-body file://${CFN_TEMPLATE} --parameters ParameterKey=KeyPairName,ParameterValue=${CFN_KEYPAIR}
 ```
 
-- After running the job above, replace the script with the one below in order to test SSH connection with one of the docker instance.
+- After running the job above, replace the script with the one below in order to test SSH connection with one of the docker instance.(Get private Ip of one of the instance)
 
 ```bash
-CFN_KEYPAIR="yasin-test-ansible-test-dev.key"
+CFN_KEYPAIR="yasin-ansible-test-dev.key"
 ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ${WORKSPACE}/${CFN_KEYPAIR} ec2-user@172.31.81.222  hostname
 ```
+# var/lib/jenkins/.ssh klasoru altinda known_hosts file var, bu dosya butun ec2 larin bilgilerini icersinde tutuyor. Cok lu ec2 ortamlarinda her gece test icin kosan ec2 larin bilgilerini burda degilde /dev/null da tutsun diye `UserKnownHostsFile=/dev/null` yazdik.
 
 - Prepare static inventory file with name of `hosts.ini` for Ansible under `ansible/inventory` folder using Docker machines private IP addresses.
+# test-petclinic-microservices-with-db/ansible/inventory folder olsuturuyoruz icersinde `hosts.ini` file olsuturacagiz. bunu terminal den; `mkdir -p ansible/inventory` ile yapabiliriz.
 
 ```ini
 172.31.91.243   ansible_user=ec2-user  
@@ -1207,11 +1194,11 @@ git push
 ```
 
 - Configure `test-creating-qa-automation-infrastructure` job and replace the existing script with the one below in order to test ansible by pinging static hosts.
-## Test yapiyoruz ansible 5 instance ile connection kurabiliyor mu, "ping" komutu karsiligi "pong" donmesi gerek her biri icin.
+## Test yapiyoruz 5 ansible instance ile connection kurabiliyor mu, "ping" komutu karsiligi "pong" donmesi gerek her biri icin. Asagidaki komutu jenkins de cofiguration dan exec shell kopyalayip run yaptikdan sonra `console output` da 5 adet ping and pong gormemiz gerekiyor ki connectiuon saglikli oldugunu bilelim.
 
 ```bash
 PATH="$PATH:/usr/local/bin"
-CFN_KEYPAIR="yasin-test-ansible-test-dev.key"
+CFN_KEYPAIR="yasin-ansible-test-dev.key"
 export ANSIBLE_INVENTORY="${WORKSPACE}/ansible/inventory/hosts.ini"
 export ANSIBLE_PRIVATE_KEY_FILE="${WORKSPACE}/${CFN_KEYPAIR}"
 export ANSIBLE_HOST_KEY_CHECKING=False
@@ -1220,8 +1207,9 @@ ansible all -m ping
 
 - Prepare dynamic inventory file with name of `dev_stack_dynamic_inventory_aws_ec2.yaml` for Ansible under `ansible/inventory` folder using Docker machines private IP addresses.
 
-## Dort tane yaml file hazirliyoruz, aslinda 1. yml file yeterli diger 3'u neyi nasil yaptigimizi gostermek icin. 
-# Ansible sayfasindan aws plugin yazinca content cikiyor, alip burada update ediyoruz. Resimde yaml dosyasindaki tagler sutun olarak gorunuyor. 
+# Dort tane yaml file hazirliyoruz, aslinda 1. yml file yeterli (best practice) diger 3'u neyi nasil yaptigimizi gostermek icin. 
+# Ansible sayfasindan aws plugin yazinca content cikiyor, alip burada update ediyoruz. Resimde yaml dosyasindaki tagler sutun olarak gorunuyor. (https://docs.ansible.com/ansible/latest/collections/amazon/aws/aws_ec2_inventory.html)
+
 ![Ansible Tags Diagram](./ansible_tags.png)
 
 ```yaml
@@ -1309,11 +1297,11 @@ git push
 
 ```bash
 APP_NAME="Petclinic"
-CFN_KEYPAIR="yasin-test-ansible-test-dev.key"
+CFN_KEYPAIR="yasin-ansible-test-dev.key"
 PATH="$PATH:/usr/local/bin"
 export ANSIBLE_PRIVATE_KEY_FILE="${WORKSPACE}/${CFN_KEYPAIR}"
 export ANSIBLE_HOST_KEY_CHECKING=False
-export APP_STACK_NAME="Call-$APP_NAME-App-${BUILD_NUMBER}" # Degistir "yasin-test-Petclinic-App-6" -cloudformation dan alabiliriz.  
+export APP_STACK_NAME="yasin-test-$APP_NAME-App-${BUILD_NUMBER}" # Jenkins shell de bunu "yasin-test-$APP_NAME-App-6" seklinde degistir -cloudformation dan version number aliyoruz.  
 # Dev Stack
 sed -i "s/APP_STACK_NAME/$APP_STACK_NAME/" ./ansible/inventory/dev_stack_dynamic_inventory_aws_ec2.yaml
 cat ./ansible/inventory/dev_stack_dynamic_inventory_aws_ec2.yaml
@@ -1331,18 +1319,18 @@ sed -i "s/APP_STACK_NAME/$APP_STACK_NAME/" ./ansible/inventory/dev_stack_swarm_w
 cat ./ansible/inventory/dev_stack_swarm_workers_aws_ec2.yaml
 ansible-inventory -v -i ./ansible/inventory/dev_stack_swarm_workers_aws_ec2.yaml --graph
 ```
-
+# sed -i komutu; substitution komutu, bir seyin yerine digerini yaz. -i ile bu degisiklik kalici oluyor. 
 - After running the job above, replace the script with the one below in order to test all instances within dev dynamic inventory by pinging static hosts.
-## Herhangi bir degisiklik yapmiyoruz. Bu defa dynamic inventory ile ping atiyoruz.
+# Bu defa dynamic inventory ile ping atiyoruz. Eskisini silip asagidakini kopyaliyoruz.
 
 ```bash
 # Test dev dynamic inventory by pinging
 APP_NAME="Petclinic"
-CFN_KEYPAIR="call-ansible-test-dev.key"
+CFN_KEYPAIR="yasin-ansible-test-dev.key"
 PATH="$PATH:/usr/local/bin"
 export ANSIBLE_PRIVATE_KEY_FILE="${WORKSPACE}/${CFN_KEYPAIR}"
 export ANSIBLE_HOST_KEY_CHECKING=False
-export APP_STACK_NAME="Call-$APP_NAME-App-${BUILD_NUMBER}"
+export APP_STACK_NAME="yasin-test-$APP_NAME-App-${BUILD_NUMBER}" # Build number cloudformation bakarak manual yaz.
 sed -i "s/APP_STACK_NAME/$APP_STACK_NAME/" ./ansible/inventory/dev_stack_dynamic_inventory_aws_ec2.yaml
 ansible -i ./ansible/inventory/dev_stack_dynamic_inventory_aws_ec2.yaml all -m ping
 ```
@@ -1472,7 +1460,7 @@ git push
 
 ```bash
 APP_NAME="Petclinic"
-CFN_KEYPAIR="yasin-test-ansible-test-dev.key"
+CFN_KEYPAIR="yasin-ansible-test-dev.key"
 PATH="$PATH:/usr/local/bin"
 export ANSIBLE_PRIVATE_KEY_FILE="${WORKSPACE}/${CFN_KEYPAIR}"
 export ANSIBLE_HOST_KEY_CHECKING=False
@@ -1493,7 +1481,7 @@ ansible-playbook -i ./ansible/inventory/dev_stack_dynamic_inventory_aws_ec2.yaml
 ```bash
 PATH="$PATH:/usr/local/bin"
 APP_NAME="Petclinic"
-AWS_STACK_NAME="Call-$APP_NAME-App-${BUILD_NUMBER}"
+AWS_STACK_NAME="yasin-test-$APP_NAME-App-${BUILD_NUMBER}"
 AWS_REGION="us-east-1"
 aws cloudformation delete-stack --region ${AWS_REGION} --stack-name ${AWS_STACK_NAME}
 ```
@@ -1502,7 +1490,7 @@ aws cloudformation delete-stack --region ${AWS_REGION} --stack-name ${AWS_STACK_
 
 ```bash
 PATH="$PATH:/usr/local/bin"
-CFN_KEYPAIR="call-ansible-test-dev.key"
+CFN_KEYPAIR="yasin-ansible-test-dev.key"
 AWS_REGION="us-east-1"
 aws ec2 delete-key-pair --region ${AWS_REGION} --key-name ${CFN_KEYPAIR}
 rm -rf ${CFN_KEYPAIR}
@@ -1514,12 +1502,12 @@ rm -rf ${CFN_KEYPAIR}
 # Environment variables
 PATH="$PATH:/usr/local/bin"
 APP_NAME="Petclinic"
-CFN_KEYPAIR="Call-$APP_NAME-dev-${BUILD_NUMBER}.key"
+CFN_KEYPAIR="yasin-ansible-test-dev-.key"
 CFN_TEMPLATE="./infrastructure/dev-docker-swarm-infrastructure-cfn-template.yml"
 AWS_REGION="us-east-1"
 export ANSIBLE_PRIVATE_KEY_FILE="${WORKSPACE}/${CFN_KEYPAIR}"
 export ANSIBLE_HOST_KEY_CHECKING=False
-export APP_STACK_NAME="Call-$APP_NAME-App-${BUILD_NUMBER}"
+export APP_STACK_NAME="-$APP_NAME-App-${BUILD_NUMBER}"
 # Create key pair for Ansible
 aws ec2 create-key-pair --region ${AWS_REGION} --key-name ${CFN_KEYPAIR} --query "KeyMaterial" --output text > ${CFN_KEYPAIR}
 chmod 400 ${CFN_KEYPAIR}
@@ -1561,6 +1549,11 @@ git push origin dev
 ## MSP 17 - Prepare a QA Automation Pipeline for Nightly Builds
 
 ![Functional Test Diagram](./functional_test.png)
+# For the functional tests; 
+- We need running application and for this we need package and install. Maven for package and we need docker images.
+- These images will be store in `ECR` and we will pull/push with using `tagging` 
+- Create Infrastructure; Docker Swarm (5 EC2) and Configure/manage by Ansible
+- Functional test will be done on `Selenium`
 
 - Create `feature/msp-17` branch from `dev`.
 
@@ -1575,7 +1568,7 @@ git checkout feature/msp-17
 ```bash
 docker run --rm -v $HOME/.m2:/root/.m2 -v $WORKSPACE:/app -w /app maven:3.8-openjdk-11 mvn clean package
 ```
-* Bu kodun  aciklamasi; Attaching local .m2 repository to the image repository and app will run on the workspace (repo of jenkins) server. 
+# Bu kodun  aciklamasi; Attaching local .m2 repository to the image repository and app will run on the workspace (repo of jenkins) server. 
 
 - Prepare a script to create ECR tags for the dev docker images and save it as `prepare-tags-ecr-for-dev-docker-images.sh` and save it under `jenkins` folder.
 
@@ -1650,7 +1643,7 @@ git push --set-upstream origin feature/msp-17
       * Write below script into the `Command`
         ```bash
         PATH="$PATH:/usr/local/bin"
-        APP_REPO_NAME="clarusway-repo/petclinic-app-dev" # Write your own repo name
+        APP_REPO_NAME="yasin-repo/petclinic-app-dev" # Write your own repo name
         AWS_REGION="us-east-1" #Update this line if you work on another region
         ECR_REGISTRY="046402772087.dkr.ecr.us-east-1.amazonaws.com" # Replace this line with your ECR name
         aws ecr create-repository \
@@ -1844,11 +1837,14 @@ networks:
 ```bash
 PATH="$PATH:/usr/local/bin"
 APP_NAME="petclinic"
-envsubst < docker-compose-swarm-dev.yml > docker-compose-swarm-dev-tagged.yml
+envsubst < docker-compose-swarm-dev.yml > docker-compose-swarm-dev-tagged.yml 
 ansible-playbook -i ./ansible/inventory/dev_stack_dynamic_inventory_aws_ec2.yaml -b --extra-vars "workspace=${WORKSPACE} app_name=${APP_NAME} aws_region=${AWS_REGION} ecr_registry=${ECR_REGISTRY}" ./ansible/playbooks/pb_deploy_app_on_docker_swarm.yaml
 ```
+# tagging script will create env variable like $admin-server-tag available inside the jenkins server and with `envsubst` command these env variable will be inside of grand-master server as well. 
+# docker-compose-swarm-dev.yml will change to docker-compose-swarm-dev-tagged.yml (we use this in grand master deploy file in playbook) with variables actual values.
 
-- Create Selenium dummy test with name of `dummy_selenium_test_headless.py` with following content to check the setup for the Selenium jobs and save it under `selenium-jobs` folder.
+- Create Selenium dummy test with name of `dummy_selenium_test_headless.py` with following content to check the setup for the Selenium jobs and save it under `selenium-jobs` folder under the project root.
+# Before running our pipeline we want to check with dummy python file test if it is running.
 
 ```python
 from selenium import webdriver
@@ -1900,7 +1896,8 @@ git commit -m 'added scripts for running dummy selenium job'
 git push --set-upstream origin feature/msp-17
 ```
 
-- Create a Jenkins job with name of `test-running-dummy-selenium-job` to check the setup for selenium tests by running dummy selenium job on `feature/msp-17` branch.
+- Create a Jenkins freestyle job with name of `test-running-dummy-selenium-job` to check the setup for selenium tests by running dummy selenium job on `feature/msp-17` branch.
+- Source code management - github url - branch: feature/msp-17 - execute shell - copy the script above.
 
 - Create Ansible playbook for running all selenium jobs under `selenium-jobs` folder and save it as `pb_run_selenium_jobs.yaml` under `ansible/playbooks` folder.
 
@@ -2113,6 +2110,10 @@ pipeline {
 
 - Create a Jenkins pipeline with name of `petclinic-nightly` with following script to run QA automation tests and configure a `cron job` to trigger the pipeline every night at midnight (`0 0 * * *`) on `dev` branch. Petclinic nightly build pipeline should be built on temporary QA automation environment.
 
+# GitHub Project URL (https://github.com/yasint23/test-petclinic-microservices-with-db) - Build periodically (0 0 * * *)
+# pipeline script from SCM - SCM:Git - Repository URl (https://github.com/yasint23/test-petclinic-microservices-with-db.git)
+# Branch:*/dev - Script Path: ./jenkins/jenkinsfile-petclinic-nightly
+
 - Commit the change, then push the script to the remote repo.
 
 ```bash
@@ -2143,7 +2144,7 @@ git checkout feature/msp-18
 ```bash
 PATH="$PATH:/usr/local/bin"
 APP_NAME="petclinic"
-CFN_KEYPAIR="matt-${APP_NAME}-qa.key"
+CFN_KEYPAIR="yasin-${APP_NAME}-qa.key"
 AWS_REGION="us-east-1"
 aws ec2 create-key-pair --region ${AWS_REGION} --key-name ${CFN_KEYPAIR} --query "KeyMaterial" --output text > ${CFN_KEYPAIR}
 chmod 400 ${CFN_KEYPAIR}
@@ -2157,8 +2158,8 @@ ls -al ${JENKINS_HOME}/.ssh
 ```bash
 PATH="$PATH:/usr/local/bin"
 APP_NAME="petclinic"
-APP_STACK_NAME="Matt-$APP_NAME-App-QA-${BUILD_NUMBER}"
-CFN_KEYPAIR="matt-${APP_NAME}-qa.key"
+APP_STACK_NAME="yasin-$APP_NAME-App-QA-${BUILD_NUMBER}"
+CFN_KEYPAIR="yasin-${APP_NAME}-qa.key"
 CFN_TEMPLATE="./infrastructure/qa-docker-swarm-infrastructure-cfn-template.yml"
 AWS_REGION="us-east-1"
 aws cloudformation create-stack --region ${AWS_REGION} --stack-name ${APP_STACK_NAME} --capabilities CAPABILITY_IAM --template-body file://${CFN_TEMPLATE} --parameters ParameterKey=KeyPairName,ParameterValue=${CFN_KEYPAIR}
@@ -2196,8 +2197,8 @@ compose:
 ```bash
 PATH="$PATH:/usr/local/bin"
 APP_NAME="petclinic"
-CFN_KEYPAIR="matt-${APP_NAME}-qa.key"
-APP_STACK_NAME="Matt-$APP_NAME-App-QA-${BUILD_NUMBER}"
+CFN_KEYPAIR="yasin-${APP_NAME}-qa.key"
+APP_STACK_NAME="yasin-$APP_NAME-App-QA-${BUILD_NUMBER}"
 export ANSIBLE_PRIVATE_KEY_FILE="${JENKINS_HOME}/.ssh/${CFN_KEYPAIR}"
 export ANSIBLE_HOST_KEY_CHECKING=False
 sed -i "s/APP_STACK_NAME/$APP_STACK_NAME/" ./ansible/inventory/qa_stack_dynamic_inventory_aws_ec2.yaml
@@ -2219,9 +2220,9 @@ pipeline {
     environment {
         PATH=sh(script:"echo $PATH:/usr/local/bin", returnStdout:true).trim()
         APP_NAME="petclinic"
-        APP_STACK_NAME="Matt-$APP_NAME-App-QA-${BUILD_NUMBER}"
+        APP_STACK_NAME="yasin-$APP_NAME-App-QA-${BUILD_NUMBER}"
         AWS_REGION="us-east-1"
-        CFN_KEYPAIR="matt-${APP_NAME}-qa.key"
+        CFN_KEYPAIR="yasin-${APP_NAME}-qa.key"
         CFN_TEMPLATE="./infrastructure/qa-docker-swarm-infrastructure-cfn-template.yml"
         ANSIBLE_PRIVATE_KEY_FILE="${JENKINS_HOME}/.ssh/${CFN_KEYPAIR}"
         ANSIBLE_HOST_KEY_CHECKING="False"
@@ -2310,7 +2311,7 @@ git checkout feature/msp-19
 
 ```bash
 PATH="$PATH:/usr/local/bin"
-APP_REPO_NAME="clarusway-repo/petclinic-app-qa"
+APP_REPO_NAME="yasin-repo/petclinic-app-qa"
 AWS_REGION="us-east-1"
 
 aws ecr create-repository \
@@ -2786,7 +2787,11 @@ git checkout feature/msp-22
 
 * Explain [Rancher Container Management Tool](https://rancher.com/docs/rancher/v2.x/en/overview/architecture/).
 
-* Create an IAM Policy with name of `call-rke-controlplane-policy.json` and also save it under `infrastructure` for `Control Plane` node to enable Rancher to create or remove EC2 resources.
+# Rancher da iki onemli nokta var; Secur baglanti ve High Availability. Rancher Server icin ec2 kuracagiz ve onune ALB ile high availibility saglayacagiz. Rancher da sec baglanti icin hhttps ile baglanabilecegiz bunun icin AWS TLS certificate ve Route-53 den domain ihtiyacimiz olacak. 
+# Rancher'in AWS servislerini kullanmasi icin IAM role tanimlayacagiz. Jenkins'e, Rancher Kubernetes Engine (RKE CLI) tool indirerek Jenkins de bu tool ile once bir cluster kuracagiz sonra cluster'a Helm Chart yardimi ile Rancher uuygulamamiz install edecegiz. 
+# Staging environment jenkins job icerisinde, Rancher yardimi ile 3 node'dan olusan kubernetes cluster icersinde deploy edecegiz. Ayni sekilde production environmentda da yapacagiz.
+
+* Create an IAM Policy with name of `yasin-rke-controlplane-policy.json` and also save it under `infrastructure` for `Control Plane` node to enable Rancher to create or remove EC2 resources.
 
 ``` json
 {
@@ -2858,7 +2863,7 @@ git checkout feature/msp-22
 }
 ```
 
-* Create an IAM Policy with name of `call-rke-etcd-worker-policy.json` and also save it under `infrastructure` for `etcd` or `worker` nodes to enable Rancher to get information from EC2 resources.
+* Create an IAM Policy with name of `yasin-rke-etcd-worker-policy.json` and also save it under `infrastructure` for `etcd` or `worker` nodes to enable Rancher to get information from EC2 resources.
 
 ```json
 {
@@ -2899,7 +2904,8 @@ git checkout feature/msp-22
   
     * Allow SSH on port 22 to any node IP that installs Docker (ex. Jenkins Server).
 
-  * Outbound rules; (aslinda burada all traffic deseydik asagidaki poirtlari acmaya gerek kalmazdi ancak rancher dokumantasyonda yazdigi icin bu sekilde yapiyoruz ancak ileride kurulum asamasinda buraya gelip all traffic diyecegiz!!! Simdiden all traffic diyebiliriz)
+  * Outbound rules; 
+  # Aslinda burada all traffic deseydik asagidaki poirtlari acmaya gerek kalmazdi ancak rancher dokumantasyonda yazdigi icin bu sekilde yapiyoruz ancak ileride kurulum asamasinda buraya gelip all traffic diyecegiz!!! Simdiden all traffic diyebiliriz
 
     * Allow SSH protocol (TCP on port 22) to any node IP from a node created using Node Driver.
 
@@ -2908,21 +2914,29 @@ git checkout feature/msp-22
     * Allow HTTPS protocol (TCP on port 443) to `35.160.43.145/32`, `35.167.242.46/32`, `52.33.59.17/32` for catalogs of `git.rancher.io`.
 
     * Allow TCP on port 2376 to any node IP from a node created using Node Driver for Docker machine TLS port.
-    # Create sec grup diyoruz. Sonra tekrar bu sec grubunun hem inbound hemde outbound kismina kendisini(secgrp id) ekliyoruz, alttaki satirda yazan communication islemini saglamak icin.
+
+# Create sec grup diyoruz. Sonra tekrar bu sec grubunun hem inbound hemde outbound kismina kendisini(sec grp id) ekliyoruz, Cluster icerisinde kendi componentlerin (`controlplane`, `etcd`, `worker`) birbirleri ile iletisim kurabilmesi icin.
+
   * Allow all protocol on all port from `rke-cluster-sg` for self communication between Rancher `controlplane`, `etcd`, `worker` nodes.
+# Edit inbound - Copy own sec grp id, paste to direction you will see rke-cluster-sg chose and save it. Do same thing to outbound rule
 
 * Log into Jenkins Server and create `rancher.pem` key-pair for Rancher Server using AWS CLI.
 # (Cluster'a jenkins server ile baglanacagimiz icin bu islemi yapiyoruz aksi halde gerek yoktu)
+# Asagidaki komut ile key olusturuyoruz.
   
 ```bash
-aws ec2 create-key-pair --region us-east-1 --key-name rancher.pem --query KeyMaterial --output text > ~/.ssh/rancher.pem
+aws ec2 create-key-pair --region us-east-1 --key-name rancher --query KeyMaterial --output text > ~/.ssh/rancher.pem 
+
 chmod 400 ~/.ssh/rancher.pem
+# Bu olmayabiliyor, terminalde .ssh folder icersine giderek orada chmod 400 rancher.pem yapmak daha kesin olur.
 ```
 
-* Launch an EC2 instance using `Ubuntu Server 20.04 LTS (HVM) (64-bit x86)` with `t2.medium` type, 16 GB root volume,  `rke-cluster-sg` security group, `rke-role` IAM Role, `Name:Rancher-Cluster-Instance` tag and `rancher.pem` key-pair. Take note of `subnet id` of EC2. 
+* Launch an EC2 instance using `Ubuntu Server 20.04 LTS (HVM) (64-bit x86)` with `t3a.medium` type, 16 GB root volume,  `rke-cluster-sg` security group, `rke-role` IAM Role, `Name:Rancher-Cluster-Instance` tag and `rancher` key-pair. Take note of `subnet id` of EC2. 
 
 * Attach a tag to the `nodes (intances)`, `subnets` and `security group` for Rancher with `Key = kubernetes.io/cluster/Rancher` and `Value = owned`. 
-# Rancher Cluster Instance-Cluster security gruba ve instance -->'Networking' --> subnet yukaridaki tag ekliyoruz)
+# Rancher Cluster Instance- Ad tag - `Key = kubernetes.io/cluster/Rancher` and `Value = owned` save
+# Sec Group - rke-cluster-sg - Ad tag - `Key = kubernetes.io/cluster/Rancher` and `Value = owned` save
+# Rancher Cluster Instance - Networking - Click Subnet ID - Ad tag - `Key = kubernetes.io/cluster/Rancher` and `Value = owned` save
   
 * Install `kubectl` on Jenkins Server. [Install and Set up kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-kubectl)
 
@@ -2937,7 +2951,7 @@ kubectl version --short --client
 # Jenkins server terminaline Rancher instance'in connection bilgisini girecegiz.
 
 cd .ssh
-ssh -i "rancher.pem" ubuntu@ec2-3-239-227-112.compute-1.amazonaws.com
+ssh -i "rancher.pem" ubuntu@ec2-3-239-227-112.compute-1.amazonaws.com 
 
 ```bash
 # Set hostname of instance
@@ -2990,6 +3004,8 @@ Unhealthy threshold : 3
 Timeout             : 5 seconds
 Interval            : 10 seoconds
 Success             : 200
+
+Chose rancher-cluster-instance - Click Include as pending below - create taget grp
 ```
 
 * Create Application Load Balancer with name of `rancher-alb` using `rke-alb-sg` security group with following settings and add `rancher-http-80-tg` target group to it.
@@ -2997,23 +3013,29 @@ Success             : 200
 ```text
 Scheme              : internet-facing
 IP address type     : ipv4
+Subnet choose at least 2 one has to be same with your instance subnet.
+Sec Group: rke-alb-sg
 
-<!-- Listeners-->
+<!-- Listeners--> (Two listeners HTTPS and HTTP)
 Protocol            : HTTPS/HTTP
 Port                : 443/80
 Availability Zones  : Select AZs of RKE instances
 Target group        : `rancher-http-80-tg` target group 
+Chose Certificate: *.devopsyasin.com
 ```
 
-* Configure ALB --> Listener (edit) of HTTP on `Port 80` to redirect traffic to HTTPS on `Port 443`. (Sadece secure porttan talepler kabul edilsin) 
+* Configure ALB --> Listener (edit) of HTTP on `Port 80` to redirect traffic to HTTPS on `Port 443`. (Sadece secure porttan talepler kabul edilsin, HTTP den gelen requestleri HTTPS'e yonlendirecek) 
+# Load Balancer - Listeners - Chose HTTP:80 - Edit - Remove `Forward to` - Add Action - Redirect HTTPS:443 
+
 # Target grubu, load balancer'a register yapmak onemli, kontrol et!!!
 
 # Create DNS A record for `rancher.devopsyasin.com` and attach the `yasin-rancher-alb` application load balancer to it.
 # Route53 --> hosted zone --> devopsyasin.com --> create record--> simple routing--> Define simple record--> 
-# --> 'rancher'devopsyasin.com--> record type:A --> value:Alias the application loadbalacer--> region-->dual.simplerecord-->create-->create record
+# --> rancher devopsyasin.com--> record type:A --> value:Alias the application loadbalacer--> region-->dual simplerecord-->create-->create record
 
 * Install RKE, the Rancher Kubernetes Engine, [Kubernetes distribution and command-line tool](https://rancher.com/docs/rke/latest/en/installation/)) on Jenkins Server.
 - Come to jenkins server on terminal (by typing exit from rancher instance)
+# Dikkat et jenkinsde .ssh icerisinde oluyor, home directorysinde calistir komutlari.
 ```bash
 curl -SsL "https://github.com/rancher/rke/releases/download/v1.3.7/rke_linux-amd64" -o "rke_linux-amd64"
 sudo mv rke_linux-amd64 /usr/local/bin/rke
@@ -3043,7 +3065,7 @@ services:
   etcd:
     snapshot: true
     creation: 6h
-    retention: 24h
+    retention: 24h 
 
 ssh_key_path: ~/.ssh/rancher.pem
 
@@ -3059,20 +3081,20 @@ ingress:
 - Bu kisma gerek yok biz cunku Jenkinse her yone actik. 
 
 ```bash
-cd petclinic-microservices-with-db/infrastructure
+cd test-petclinic-microservices-with-db/infrastructure
 rke up --config ./rancher-cluster.yml
 ```
 
 * Check if the RKE Kubernetes Cluster created successfully.
 
 ```bash
-mkdir -p ~/.kube
-mv ./kube_config_rancher-cluster.yml $HOME/.kube/config
+mkdir -p ~/.kube     # Biliyoruz ki K8s butun cluster listelerini /.kube altina listeliyor o nedenle bunu yapiyoruz
+mv ./kube_config_rancher-cluster.yml $HOME/.kube/config  # infrastructure alinda olusan cluster bilgilerini tasiyoruz
 chmod 400 ~/.kube/config
 kubectl get nodes
 kubectl get pods --all-namespaces
 ```
-- Suana kadar EC2-rancher icersine kubernetes cluster kurduk. Bi sonraki adim da buna rancher uygulamasini deploy edecegiZ.
+# Suana kadar EC2-rancher icersine kubernetes cluster kurduk. Bi sonraki adim da buna rancher uygulamasini deploy edecegiZ.
 * Commit the change, then push the script to the remote repo.
 
 ``` bash
@@ -3273,8 +3295,8 @@ kompose convert -f docker-compose.yml -o petclinic_chart/templates
 
 * Update deployment files with `init-containers` to launch microservices in sequence. See [Init Containers](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/).
 
-# Daha once uygulamamizi servisler (Config-server discovery-server Api-gateway customer ve visit) ile ayaga kaldiriyorduk, kubernetes de initcontainers ile yapacagiz. 
-# Copy to below 'resources: {}' in ...deployment.yml files and 'initContainers' must be same line (indentation) with 'containers..'
+# Daha once uygulamamizi servisler (Config-server discovery-server Api-gateway customer ve visit) ile ayaga kaldiriyorduk, kubernetes de init container lar ile yapacagiz. 
+# Copy the below commands in all ...deployment.yml files under the `resources: {}`  and 'initContainers' must be same line (indentation) with `containers..`
 ```yaml
 # for discovery server deployment files
       initContainers:
@@ -3287,13 +3309,14 @@ kompose convert -f docker-compose.yml -o petclinic_chart/templates
         image: busybox
         command: ['sh', '-c', 'until nc -z discovery-server:8761; do echo waiting for discovery-server; sleep 2; done;']
 ``` 
+
 * Update `spec.rules.host` field of `api-gateway-ingress.yaml` file as below.
 
 ```yaml
 '{{ .Values.DNS_NAME }}'
 ```
 
-* Add `k8s/petclinic_chart/values-template.yaml` file as below.
+* Create values-template.yaml under `k8s/petclinic_chart/values-template.yaml` file as below. 
 # Daha once jenkins server da tag ler olusturmustuk, imagelerin taglerini oradan alacak.
 
 ```yaml
@@ -3307,10 +3330,11 @@ IMAGE_TAG_ADMIN_SERVER: "${IMAGE_TAG_ADMIN_SERVER}"
 IMAGE_TAG_HYSTRIX_DASHBOARD: "${IMAGE_TAG_HYSTRIX_DASHBOARD}"
 IMAGE_TAG_GRAFANA_SERVICE: "${IMAGE_TAG_GRAFANA_SERVICE}"
 IMAGE_TAG_PROMETHEUS_SERVICE: "${IMAGE_TAG_PROMETHEUS_SERVICE}"
-DNS_NAME: <"DNS Name of your application">                         #Enter your dns name not "rancher dns"
+DNS_NAME: <"DNS Name of your application">          #Enter your dns name not "rancher dns(staging-petclinic.devopsyasin.com)"
 ```
 
-* Check if the petclinic_chart working as expected. (Test etmek icin yapiyoruz)
+* Check if the petclinic_chart working as expected. (Test etmek icin yapiyoruz) 
+# Hepsini terminale kopyalayarak test ediyoruz.
 
 ```bash
 export IMAGE_TAG_CONFIG_SERVER="testing-image-1"    
@@ -3445,6 +3469,7 @@ AWS_REGION=us-east-1 helm upgrade --install petclinic-release stable-petclinicap
 ```
 
 * In Chart.yaml, set the `version` value to `HELM_VERSION` in Chart.yaml for automation in jenkins pipeline.
+# Chart.yaml da version: sayilari silip HELM_VERSION yazacagiz.
 
 * Commit the change, then push the script to the remote repo.
 
@@ -3464,12 +3489,13 @@ git push origin release
 # rancher şifremi unuttum:
 KUBECONFIG=~/.kube/config
 kubectl --kubeconfig $KUBECONFIG -n cattle-system exec $(kubectl --kubeconfig $KUBECONFIG -n cattle-system get pods -l app=rancher | grep '1/1' | head -1 | awk '{ print $1 }') -- reset-password
+## Sifre unutma islemi buraya kadar, asagisi rancher sayfasinda yaptgimiz islemler
 
 - Click 'local' --> Click 'Download Kubeconfig' (local cluster config dosyasi iniyor) Bu dosyanin icerigini terminalde .kube/config dosyasina rewrite yapistiralim. "overwrite onaylamak gerekiyor save icin"
 
-- "Terminalde 'kubectl get nodes' ile controlplane,etcd,worker gormemiz gerekiyor"
+# "Terminalde 'kubectl get nodes' ile controlplane,etcd,worker gormemiz gerekiyor"
 
-* To provide access of Rancher to the cloud resources, create a `Cloud Credentials` for AWS on Rancher and name it as `Yasin-AWS-Training-Account`.
+* To provide access of Rancher to the cloud resources, create a `Cloud Credentials` for AWS on Rancher and name it as `Yasin-AWS-Training-Account`. (On Rancher Page)
 * Rancher da AWS servisleri ile ilgili islem yapabilmek icin.
 - Rancher sayfasinda, Home(uc cizgi)--> Cluster management--> Cloud Credentials --> create--> aws --> any name and credentials. 
 
@@ -3507,11 +3533,14 @@ etcd              : checked
 Control Plane     : checked
 Worker            : checked
 ```
+- Create
+
 # it will take some time to get ready refresh the page to see the cluster.
 * Create `petclinic-staging-ns` namespace on `petclinic-cluster-staging` with Rancher.
 # Cluster--> Project/namespaces--> Create namespaces (on default)--> name:petclinic-staging-ns -->default--> create
 
 * Create a Jenkins Job (freestyle job) and name it as `create-ecr-docker-registry-for-petclinic-staging` to create Docker Registry for `Staging` manually on AWS ECR.
+# Asagidaki komutlari tek seferde terminale kopyalayarak da yapabiliriz. (ECR repo olsuturuyoruz)
 
 ``` bash
 PATH="$PATH:/usr/local/bin"
@@ -3594,7 +3623,7 @@ rancher --version
 * Create Rancher API Key [Rancher API Key](https://rancher.com/docs/rancher/v2.x/en/user-settings/api-keys/#creating-an-api-key) to enable access to the `Rancher` server. Take note, `Access Key (username)` and `Secret Key (password)`.
 
 # We need to create credentials for jenkins to connect rancher instance
-# Rancher page--> Click Avatar--> Account&API keys--> Create API key--> (scope & A month from now )--> create *Don't close page copy information somewhere you will not see the page again. Then go to jenkins page.
+# Rancher page--> Click Avatar--> Account&API keys--> Create API key--> (No scope & A month from now )--> create *Don't close page copy information somewhere you will not see the page again. Then go to jenkins page.
 
 * Create a credentials with kind of `Username with password` on Jenkins Server using the `Rancher API Key`.
 
@@ -3611,12 +3640,13 @@ sudo su -s /bin/bash jenkins
 export PATH=$PATH:/usr/local/bin
 helm version
 helm plugin install https://github.com/hypnoglow/helm-s3.git
-exit from jenkins user
 
-* Create a Staging Pipeline on Jenkins with name of `petclinic-staging` with following script and configure a `cron job` to trigger the pipeline every Sundays at midnight (`59 23 * * 0`) on `release` branch. `Petclinic staging pipeline` should be deployed on permanent staging-environment on `petclinic-cluster` Kubernetes cluster under `petclinic-staging-ns` namespace.
+exit   from jenkins user
+
+* Create a Staging Pipeline on Jenkins with name of `petclinic-staging` with following script and configure a `cron job` to trigger the pipeline every Sundays at midnight (`59 23 * * 0`) on `release` branch and path `jenkins/jenkinsfile-petclinic-staging`. `Petclinic staging pipeline` should be deployed on permanent staging-environment on `petclinic-cluster` Kubernetes cluster under `petclinic-staging-ns` namespace.
 
 * Prepare a Jenkinsfile for `petclinic-staging` pipeline and save it as `jenkinsfile-petclinic-staging` under `jenkins` folder.
-
+## Readme den hatali aliyor calisan dosyayi kopyala
 ``` groovy
 pipeline {
     agent any
@@ -3629,7 +3659,7 @@ pipeline {
         ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
         RANCHER_URL="https://rancher.clarusway.us" # rancher url https://rancher.devopsyasin.com/
         // Get the project-id from Rancher UI (petclinic-cluster-staging namespace, View in API, copy projectId )
-        RANCHER_CONTEXT="petclinic-cluster:project-id"    # Project/Namespaces-->click ... on petclinic staging ns-->edit yaml--> copy "c-rn2r8:p-skwz6" here
+        RANCHER_CONTEXT="petclinic-cluster:project-id"    # Project/Namespaces-->click "on petclinic staging ns" -->edit yaml--> copy "c-rn2r8:p-skwz6" here
        //First part of projectID
         CLUSTERID="petclinic-cluster"   # paste first part of id "c-rn2r8"
         RANCHER_CREDS=credentials('rancher-petclinic-credentials') # From jenkins credential which name we gave
